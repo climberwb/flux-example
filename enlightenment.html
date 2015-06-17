@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style type="text/css">
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/2.4.1/lodash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.12.2/react.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.12.2/JSXTransformer.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-router/0.11.6/react-router.js"></script>
+    <script src="https://kenwheeler.github.io/mcfly/McFly.js"></script>
+</head>
+<body>
+    <div id="app-container"></div>
+    <script type="text/jsx">
+
+        /** McFly */
+
+        var Flux = new McFly();
+
+        /** Store */
+
+        _recipes = [];
+
+        function addRecipes(recipe){
+            _recipes.push(recipe);
+        }
+
+        function clearRecipes(){
+            _recipes = [];
+            alert('clear');
+        }
+
+        function deleteRecipe(index){
+            _recipes.splice(index,1);
+            alert('_recipes');
+        }
+
+        var RecipeStore = Flux.createStore({
+            getRecipes: function(){
+               return _recipes;
+            }
+        }, function(payload){
+            if(payload.actionType === "ADD_RECIPE") {
+                addRecipes(payload.text);
+                RecipeStore.emitChange();
+            }
+            if(payload.actionType === "CLEAR_RECIPES") {
+                alert('store clear');
+                clearRecipes();
+                RecipeStore.emitChange();
+            }
+            if(payload.actionType === "DELETE_RECIPE") {
+                alert('store delete');
+                deleteRecipe(payload.index);
+                alert('poop');
+                RecipeStore.emitChange();
+            }
+        });
+
+        /** Actions */
+
+        var RecipeActions = Flux.createActions({
+            addRecipe: function(text){
+               return {
+                  actionType: "ADD_RECIPE",
+                  text: text
+               }
+            },
+            clearRecipes: function(){
+                alert('action clear');
+               return {
+                  actionType: "CLEAR_RECIPES"
+               }
+            },
+            deleteRecipe: function(index){
+                alert('action delete');
+               return {
+                  actionType: "DELETE_RECIPE",
+                  index: index
+               }
+            }
+        });
+
+        function getRecipes(){
+           return {
+               recipes: RecipeStore.getRecipes()
+           }
+        }
+
+        /** Controller View */
+
+        var RecipeBook = React.createClass({
+            mixins: [RecipeStore.mixin],
+            getInitialState: function(){
+                return getRecipes();
+            },
+            storeDidChange: function() {
+                console.log('changed');
+                this.setState(getRecipes());
+            },
+            render: function() {
+                return <Recipes recipes={this.state.recipes} />;
+            }
+        });
+
+        /** Component */
+        var Input = React.createClass({
+             deleteRecipe: function(index){
+                alert('Recipe delete component');
+                RecipeActions.deleteRecipe(index);
+            },
+            render: function(){
+                    
+
+                    return (
+                            <li>
+                                {this.props.recipe} <button type="button" onClick={this.deleteRecipe.bind(this, this.props.key)}>Delete</button>
+                            </li>
+                        )
+
+            }
+        });
+        var Recipes = React.createClass({
+            addRecipe: function(){
+                RecipeActions.addRecipe(this.refs.inv.getDOMNode().value);
+                this.refs.inv.getDOMNode().value = "";
+            },
+            clearRecipes: function(){
+                RecipeActions.clearRecipes();
+            },
+           
+            render: function() {
+                var self = this;
+                var recipeNodes = this.props.recipes.map(function(recipe, index){
+                        return <Input recipe={recipe} key={index}/>
+                    })
+                /**
+                * HOMEWORK: Fix the form functionality:
+                *
+                * 1. Make input a sub component.
+                * 2. Pass in a method from the parent that fires an action with form instance data.
+                * 3. Re render the inputs every time the store updates with the new values from props.
+                * 4. Now everything in the UI is a reflection of the store. UI is data. Data is UI. Om.
+                *
+                * -- Hint will be mailed out after this meetup
+                * -- Solution will be mailed out before the next meetup.
+                * -- Extra credit: https://github.com/facebook/react/issues/955
+
+                */
+                return (
+
+                <div className="todos_app">
+                    <input type="text" value={this.props.HOMEWORK} ref="inv"/>
+                    <ul className="recipes">
+                        {recipeNodes}
+                    </ul>
+                    <button onClick={this.clearRecipes}>Clear</button>
+                    <button onClick={this.addRecipe}>Add</button>
+                </div>
+                )
+            }
+        });
+
+        React.render(<RecipeBook />, document.body);
+    </script>
+</body>
+</html>
