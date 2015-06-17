@@ -35,11 +35,14 @@
         function addRecipe(text){
             _recipes.push(text);
         }
+        function deleteRecipe(index){
+            _recipes.splice(index,1);
+        }
         function deleteRecipes(text){
             _recipes=[];
         }
-        function deleteLastRecipe(){
-            _recipes.pop();
+        function deleteLastRecipe(index){
+             _recipes.pop(text);
         }
         var RecipeStore = Flux.createStore({
             getRecipes: function(){
@@ -56,6 +59,10 @@
             }
             else if(payload.actionType === "DELETE_LAST_RECIPE"){
                 deleteLastRecipe();
+                RecipeStore.emitChange();
+            }
+            else if(payload.actionType === "DELETE_RECIPE"){
+                deleteRecipe();
                 RecipeStore.emitChange();
             }
         });
@@ -78,7 +85,14 @@
               return{
                   actionType: "DELETE_LAST_RECIPE"
               }
+            },
+            deleteRecipe: function(index){
+              return{
+                  actionType: "DELETE_RECIPE",
+                  index: index
+              }
             }
+            
         });
 
         function getRecipes(){
@@ -114,13 +128,18 @@
             deleteLastRecipe: function(){
                 RecipeActions.deleteLastRecipe();
             },
+            deleteRecipe: function(e){
+                 RecipeActions.deleteRecipe(e);
+              //  RecipeActions.deleteRecipe({index: 0});
+            },
             render: function() {
                 return (
                 <div className="recipes_app">
                     <ul className="recipes">
-                        { this.props.recipes.map(function(recipe, index){
-                            return <li key={index}>recipe {index} : {recipe._id}</li>
-                        })}
+                        {
+                          this.props.recipes.map(function(recipe, index){
+                            return <li key={index}>recipe {index} : {recipe._id} <button onClick={this.deleteRecipe.bind(this,index)}>Delete</button></li>
+                        }.bind(this))}
                     </ul>
                     <button onClick={this.addRecipe}>Add recipe</button>
                     <button onClick={this.deleteRecipes}>Delete Recipes</button>
